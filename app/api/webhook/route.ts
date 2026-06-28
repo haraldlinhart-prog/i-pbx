@@ -9,10 +9,13 @@ import { createClient } from '@supabase/supabase-js'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
 const resend = new Resend(process.env.RESEND_API_KEY!)
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Supabase client initialized lazily inside handler to avoid build-time errors
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 const IPBX_PBX       = '1343'
 const IPBX_SMS_KEY   = process.env.IPBX_SMS_KEY!    // Subscriber-Management API Key
@@ -31,7 +34,7 @@ function generatePin(): string {
 }
 
 async function getNextFreeNumber(): Promise<number | null> {
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from('ipbx_numbers')
     .select('nr')
     .eq('status', 'free')
@@ -197,7 +200,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Nummer reservieren
-    await supabase.from('ipbx_numbers')
+    await getSupabase().from('ipbx_numbers')
       .update({ status: 'reserved', reserved_at: new Date().toISOString() })
       .eq('nr', nr)
 
@@ -205,7 +208,7 @@ export async function POST(req: NextRequest) {
     const pin = generatePin()
 
     // 3. Bestellung in Supabase speichern
-    const { data: order } = await supabase.from('ipbx_orders').insert({
+    const { data: order } = await getSupabase().from('ipbx_orders').insert({
       stripe_session_id: session.id,
       stripe_payment_intent: session.payment_intent as string,
       nr,
@@ -225,14 +228,14 @@ export async function POST(req: NextRequest) {
 
     if (provisioned) {
       // Nummer aktivieren
-      await supabase.from('ipbx_numbers')
+      await getSupabase().from('ipbx_numbers')
         .update({ status: 'active', customer_id: order?.id, activated_at: new Date().toISOString() })
         .eq('nr', nr)
-      await supabase.from('ipbx_orders')
+      await getSupabase().from('ipbx_orders')
         .update({ status: 'provisioned', provisioned_at: new Date().toISOString() })
         .eq('id', order?.id)
     } else {
-      await supabase.from('ipbx_orders').update({ status: 'failed' }).eq('id', order?.id)
+      await getSupabase().from('ipbx_orders').update({ status: 'failed' }).eq('id', order?.id)
     }
 
     // 5. Session-Link generieren
