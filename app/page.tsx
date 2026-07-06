@@ -4,6 +4,9 @@ import ContactForm from './ContactForm'
 export default function Home() {
   return (
     <>
+{/* <!-- REVIVE:START --> */}
+<div dangerouslySetInnerHTML={{__html: "<div style=\"display:flex;justify-content:center;margin:16px 0;\">\n<ins data-revive-zoneid=\"6\" data-revive-id=\"0b01ba1194fdc0e89c6321458dbc5814\"></ins>\n<script async src=\"//ads.pan21.com/www/delivery/asyncjs.php\"></script>\n</div>"}} />
+{/* <!-- REVIVE:END --> */}
       {/* NAV */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
