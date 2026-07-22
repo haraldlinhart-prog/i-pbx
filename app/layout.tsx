@@ -22,7 +22,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: `
           var _paq = window._paq = window._paq || [];
-          _paq.push(['requireConsent']);
           _paq.push(['trackPageView']);
           _paq.push(['enableLinkTracking']);
           (function() {
