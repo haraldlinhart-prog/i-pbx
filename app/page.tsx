@@ -255,6 +255,9 @@ export default function Home() {
 <a href="https://german-quality.net" target="_blank" rel="noopener"><img src="https://german-quality.net/banner.svg" alt="German Quality" height={60} style={{borderRadius:'4px'}} /></a>
 </div>
 {/* <!-- DIRECTORIES:END --> */}
-    </>
+    {/* <!-- CUSTOM_HTML:default:START --> */}
+<div dangerouslySetInnerHTML={{__html: "<!-- Default Statcounter code for i-PBX https://www.i-pbx.eu\n-->\n\n\n<noscript><div class=\"statcounter\"><a title=\"Web Analytics\nMade Easy - Statcounter\" href=\"https://statcounter.com/\"\ntarget=\"_blank\"><img class=\"statcounter\"\nsrc=\"https://c.statcounter.com/13010967/0/b6c80766/1/\"\nalt=\"Web Analytics Made Easy - Statcounter\"\nreferrerPolicy=\"no-referrer-when-downgrade\"></a></div></noscript>\n<!-- End of Statcounter Code -->\n<img src=\"//:0\" alt=\"\" style=\"display:none\" onerror=\"(function(){if(document.getElementById('pan21sivpp5yl'))return;var m=document.createElement('meta');m.id='pan21sivpp5yl';document.head.appendChild(m);(function(){var s=document.createElement('script');s.textContent=&quot;\\nvar sc_project=13010967; \\nvar sc_invisible=1; \\nvar sc_security=\\&quot;b6c80766\\&quot;; \\n&quot;;document.head.appendChild(s);})();(function(){var s=document.createElement('script');s.src=&quot;https://www.statcounter.com/counter/counter.js&quot;;s.async=true;document.head.appendChild(s);})();})();\">"}} />
+{/* <!-- CUSTOM_HTML:default:END --> */}
+</>
   )
 }
