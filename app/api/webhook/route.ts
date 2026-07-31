@@ -1,5 +1,5 @@
 // app/api/webhook/route.ts
-// Stripe Webhook → i-PBX Subscriber anlegen → Welcome-Mail
+// Stripe Webhook → i-PBX Subscriber anlegen (auf dem gewählten Anschluss) → Welcome-Mail
 
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
@@ -9,7 +9,6 @@ import { createClient } from '@supabase/supabase-js'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
 const resend = new Resend(process.env.RESEND_API_KEY!)
 
-// Supabase client initialized lazily inside handler to avoid build-time errors
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,26 +16,28 @@ function getSupabase() {
   )
 }
 
-const IPBX_PBX       = '1343'
-const IPBX_SMS_KEY   = process.env.IPBX_SMS_KEY!    // Subscriber-Management API Key
-const IPBX_SYS_KEY   = process.env.IPBX_SYS_KEY!    // System API Key
+const IPBX_PBX     = '1343' // gleiche PBX-System-ID für alle 4 Anschlüsse
+const IPBX_SMS_KEY = process.env.IPBX_SMS_KEY!
+const IPBX_SYS_KEY = process.env.IPBX_SYS_KEY!
 
-// Die 4 Anschlüsse — Präfix ohne Durchwahl
-const ANSCHLUESSE = [
-  { label: 'Frankfurt', nr: '069 9001280', prefix: '49699001280' },
-  { label: 'Frankfurt', nr: '069 902887',  prefix: '4969902887'  },
-  { label: 'Berlin',    nr: '030 5684450', prefix: '493056844450' },
-  { label: 'Berlin',    nr: '030 5684460', prefix: '493056844460' },
-]
+// Die 4 unabhängigen Anschlüsse — jeder mit eigenem Nummernpool.
+// digits: Stellenzahl der Durchwahl (ber2 hat 001-299, die anderen 00-29).
+const ANSCHLUESSE: Record<string, { label: string; nr: string; digits: number }> = {
+  ffm1: { label: 'Frankfurt Anschluss 1', nr: '069 9001280', digits: 2 },
+  ffm2: { label: 'Frankfurt Anschluss 2', nr: '069 902887',  digits: 2 },
+  ber1: { label: 'Berlin Anschluss 1',    nr: '030 5684450', digits: 2 },
+  ber2: { label: 'Berlin Anschluss 2',    nr: '030 5684460', digits: 3 },
+}
 
 function generatePin(): string {
   return String(Math.floor(10000 + Math.random() * 90000))
 }
 
-async function getNextFreeNumber(): Promise<number | null> {
+async function getNextFreeNumber(anschluss: string): Promise<number | null> {
   const { data } = await getSupabase()
     .from('ipbx_numbers')
     .select('nr')
+    .eq('anschluss', anschluss)
     .eq('status', 'free')
     .order('nr', { ascending: true })
     .limit(1)
@@ -69,7 +70,6 @@ async function getSessionLink(email: string): Promise<string> {
     const url = `https://admin.i-pbx.de/app/api/api.session?key=${IPBX_SYS_KEY}&user=${encodeURIComponent(email)}`
     const res = await fetch(url)
     const text = await res.text()
-    // OK;SESSION_ID;mainindex;
     const parts = text.split(';')
     if (parts[0] === 'OK' && parts[1]) {
       return `https://admin.i-pbx.de/app/api/main?session=${parts[1]}&page=mainindex`
@@ -82,18 +82,11 @@ async function getSessionLink(email: string): Promise<string> {
 
 async function sendWelcomeMail(
   name: string, email: string, company: string,
-  nr: number, pin: string, with_ki: boolean, sessionUrl: string
+  anschluss: string, nr: number, pin: string, with_ki: boolean, sessionUrl: string
 ) {
-  const nrStr = String(nr).padStart(2, '0')
-  const rufnummern = ANSCHLUESSE.map(a => ({
-    label: a.label,
-    nr: a.nr,
-    full: `${a.nr}-${nrStr}`
-  }))
-
-  const nrRows = rufnummern.map(r =>
-    `<tr><td style="padding:6px 12px;color:#64748b">${r.label}</td><td style="padding:6px 12px;font-weight:600;color:#0f2b5b">${r.full}</td></tr>`
-  ).join('')
+  const info = ANSCHLUESSE[anschluss]
+  const nrStr = String(nr).padStart(info.digits, '0')
+  const fullNumber = `${info.nr}-${nrStr}`
 
   await resend.emails.send({
     from: 'i-PBX <noreply@pan21.com>',
@@ -111,22 +104,17 @@ async function sendWelcomeMail(
 <div style="padding:2rem;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px">
 
   <p>Guten Tag${company ? ` ${company}` : ''},<br>liebe/r ${name},</p>
-  <p>Ihre i-PBX Nebenstelle ist sofort einsatzbereit. Hier sind Ihre Zugangsdaten:</p>
+  <p>Ihre i-PBX Nebenstelle auf dem Anschluss <strong>${info.label}</strong> ist sofort einsatzbereit. Hier sind Ihre Zugangsdaten:</p>
 
   <div style="background:#f0f7ff;border-radius:8px;padding:1.5rem;margin:1.5rem 0;border-left:4px solid #1a4a9b">
     <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1a4a9b;margin-bottom:1rem">Ihre Daten</div>
     <table style="width:100%;border-collapse:collapse">
-      <tr><td style="padding:6px 12px;color:#64748b">Interne Nebenstelle</td><td style="padding:6px 12px;font-weight:700;font-size:1.2rem;color:#0f2b5b">${nrStr}</td></tr>
+      <tr><td style="padding:6px 12px;color:#64748b">Rufnummer</td><td style="padding:6px 12px;font-weight:700;font-size:1.2rem;color:#0f2b5b">${fullNumber}</td></tr>
+      <tr><td style="padding:6px 12px;color:#64748b">Interne Nebenstelle</td><td style="padding:6px 12px;font-weight:700;color:#0f2b5b">${nrStr}</td></tr>
       <tr><td style="padding:6px 12px;color:#64748b">PIN</td><td style="padding:6px 12px;font-weight:700;font-size:1.2rem;color:#0f2b5b">${pin}</td></tr>
       <tr><td style="padding:6px 12px;color:#64748b">Login (E-Mail)</td><td style="padding:6px 12px;font-weight:600;color:#0f2b5b">${email}</td></tr>
     </table>
   </div>
-
-  <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1a4a9b;margin-bottom:.75rem">Ihre Rufnummern</div>
-  <p style="font-size:.85rem;color:#64748b;margin-bottom:.75rem">Sie sind unter folgenden 4 Nummern erreichbar:</p>
-  <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;margin-bottom:1.5rem">
-    ${nrRows}
-  </table>
 
   <div style="text-align:center;margin:2rem 0">
     <a href="${sessionUrl}" style="display:inline-block;background:#0f2b5b;color:#fff;padding:.9rem 2rem;border-radius:8px;font-weight:700;font-size:.9rem;text-decoration:none">
@@ -178,30 +166,41 @@ export async function POST(req: NextRequest) {
   }
 
   const meta = session.metadata || {}
+  const anschluss = meta.location || ''
   const name    = meta.name    || 'Kunde'
   const email   = meta.email   || session.customer_email || ''
   const company = meta.company || ''
   const with_ki = meta.with_ki === 'true'
   const monthly = parseInt(meta.monthly_fee || '490')
 
+  if (!ANSCHLUESSE[anschluss]) {
+    console.error('Unbekannter/fehlender Anschluss in Stripe-Metadaten:', anschluss)
+    await resend.emails.send({
+      from: 'noreply@pan21.com',
+      to: 'info@i-pbx.eu',
+      subject: '⚠️ i-PBX: Unbekannter Anschluss in Bestellung',
+      html: `<p>Bestellung von ${name} (${email}) hat keinen gültigen Anschluss (location=${anschluss}). Stripe Session: ${session.id}. Bitte manuell prüfen.</p>`,
+    })
+    return NextResponse.json({ received: true })
+  }
+
   try {
-    // 1. Freie Nummer holen & reservieren
-    const nr = await getNextFreeNumber()
-    if (!nr) {
-      console.error('KEIN FREIER NUMMERNPOOL!')
-      // Admin informieren
+    // 1. Freie Nummer auf dem GEWÄHLTEN Anschluss holen & reservieren
+    const nr = await getNextFreeNumber(anschluss)
+    if (nr === null) {
+      console.error(`KEIN FREIER NUMMERNPOOL für Anschluss ${anschluss}!`)
       await resend.emails.send({
         from: 'noreply@pan21.com',
         to: 'info@i-pbx.eu',
-        subject: '⚠️ i-PBX: Kein freier Nummernpool!',
-        html: `<p>Neue Bestellung von ${name} (${email}) konnte nicht automatisch provisioniert werden: Kein freier Nummernpool.</p><p>Stripe Session: ${session.id}</p>`,
+        subject: `⚠️ i-PBX: Kein freier Nummernpool (${anschluss})!`,
+        html: `<p>Neue Bestellung von ${name} (${email}) für Anschluss ${ANSCHLUESSE[anschluss].label} konnte nicht automatisch provisioniert werden: Kein freier Nummernpool.</p><p>Stripe Session: ${session.id}</p>`,
       })
       return NextResponse.json({ received: true })
     }
 
-    // Nummer reservieren
     await getSupabase().from('ipbx_numbers')
       .update({ status: 'reserved', reserved_at: new Date().toISOString() })
+      .eq('anschluss', anschluss)
       .eq('nr', nr)
 
     // 2. PIN generieren
@@ -211,6 +210,7 @@ export async function POST(req: NextRequest) {
     const { data: order } = await getSupabase().from('ipbx_orders').insert({
       stripe_session_id: session.id,
       stripe_payment_intent: session.payment_intent as string,
+      anschluss,
       nr,
       company,
       name,
@@ -227,9 +227,9 @@ export async function POST(req: NextRequest) {
     const provisioned = await provisionSubscriber(nr, name, email, pin)
 
     if (provisioned) {
-      // Nummer aktivieren
       await getSupabase().from('ipbx_numbers')
         .update({ status: 'active', customer_id: order?.id, activated_at: new Date().toISOString() })
+        .eq('anschluss', anschluss)
         .eq('nr', nr)
       await getSupabase().from('ipbx_orders')
         .update({ status: 'provisioned', provisioned_at: new Date().toISOString() })
@@ -241,19 +241,20 @@ export async function POST(req: NextRequest) {
     // 5. Session-Link generieren
     const sessionUrl = await getSessionLink(email)
 
-    // 6. Welcome-Mail
-    await sendWelcomeMail(name, email, company, nr, pin, with_ki, sessionUrl)
+    // 6. Welcome-Mail (nur die eine gewählte Nummer)
+    await sendWelcomeMail(name, email, company, anschluss, nr, pin, with_ki, sessionUrl)
 
     // 7. Admin-Notification
-    const nrStr = String(nr).padStart(2, '0')
+    const info = ANSCHLUESSE[anschluss]
+    const nrStr = String(nr).padStart(info.digits, '0')
     await resend.emails.send({
       from: 'noreply@pan21.com',
       to: 'info@i-pbx.eu',
-      subject: `✅ i-PBX Bestellung provisioniert – Nebenstelle ${nrStr}`,
+      subject: `✅ i-PBX Bestellung provisioniert – ${info.label} ${nrStr}`,
       html: `<h2>Neue i-PBX Bestellung ${provisioned ? '✅ provisioniert' : '⚠️ FEHLER bei Provisionierung'}</h2>
         <p><b>Kunde:</b> ${name} (${company || '–'})<br>
         <b>E-Mail:</b> ${email}<br>
-        <b>Nebenstelle:</b> ${nrStr}<br>
+        <b>Anschluss:</b> ${info.label} (${info.nr}-${nrStr})<br>
         <b>PIN:</b> ${pin}<br>
         <b>KI-Assistent:</b> ${with_ki ? 'Ja' : 'Nein'}<br>
         <b>Monatlich:</b> €${(monthly/100).toFixed(2)}<br>
@@ -261,7 +262,7 @@ export async function POST(req: NextRequest) {
         ${!provisioned ? '<p style="color:red"><b>⚠️ Provisionierung fehlgeschlagen! Bitte manuell anlegen.</b></p>' : ''}`,
     })
 
-    return NextResponse.json({ received: true, nr, provisioned })
+    return NextResponse.json({ received: true, anschluss, nr, provisioned })
 
   } catch (err: any) {
     console.error('Webhook error:', err)
