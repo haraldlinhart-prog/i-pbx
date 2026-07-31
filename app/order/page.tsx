@@ -3,17 +3,27 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
 const LOCATIONS = [
-  { id: 'ffm1', city: 'Frankfurt', prefix: '069', label: 'Frankfurt Anschluss 1', slots: 10 },
-  { id: 'ffm2', city: 'Frankfurt', prefix: '069', label: 'Frankfurt Anschluss 2', slots: 22 },
-  { id: 'ber1', city: 'Berlin', prefix: '030', label: 'Berlin Anschluss 1', slots: 23 },
-  { id: 'ber2', city: 'Berlin', prefix: '030', label: 'Berlin Anschluss 2', slots: 23 },
+  { id: 'ffm1', city: 'Frankfurt', prefix: '069', label: 'Frankfurt Anschluss 1' },
+  { id: 'ffm2', city: 'Frankfurt', prefix: '069', label: 'Frankfurt Anschluss 2' },
+  { id: 'ber1', city: 'Berlin', prefix: '030', label: 'Berlin Anschluss 1' },
+  { id: 'ber2', city: 'Berlin', prefix: '030', label: 'Berlin Anschluss 2' },
 ]
+
+type Availability = Record<string, { free: number; total: number }>
 
 function OrderInner() {
   const params = useSearchParams()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [availability, setAvailability] = useState<Availability>({})
+
+  useEffect(() => {
+    fetch('/api/availability')
+      .then(r => r.json())
+      .then(data => setAvailability(data))
+      .catch(() => {})
+  }, [])
 
   const [form, setForm] = useState({
     location: '',
@@ -94,11 +104,18 @@ function OrderInner() {
                 Standort & Vorwahl wählen
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem', marginBottom: '1.5rem' }}>
-                {LOCATIONS.map(loc => (
-                  <div key={loc.id} onClick={() => setForm(p => ({...p, location: loc.id}))}
+                {LOCATIONS.map(loc => {
+                  const avail = availability[loc.id]
+                  const free = avail?.free
+                  const total = avail?.total
+                  const low = free !== undefined && total !== undefined && free < total * 0.15
+                  return (
+                  <div key={loc.id} onClick={() => free !== 0 && setForm(p => ({...p, location: loc.id}))}
                     style={{
                       border: '2px solid ' + (form.location === loc.id ? 'var(--blue-light)' : 'var(--border)'),
-                      borderRadius: 10, padding: '1.25rem 1.5rem', cursor: 'pointer',
+                      borderRadius: 10, padding: '1.25rem 1.5rem',
+                      cursor: free === 0 ? 'not-allowed' : 'pointer',
+                      opacity: free === 0 ? 0.5 : 1,
                       background: form.location === loc.id ? '#EFF6FF' : 'white',
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       transition: 'all .2s'
@@ -108,11 +125,14 @@ function OrderInner() {
                       <div style={{ fontSize: '.85rem', color: 'var(--gray-text)', marginTop: '.2rem' }}>Vorwahl {loc.prefix} · VoIP / SIP / Skype</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 700, color: loc.slots < 5 ? '#f59e0b' : 'var(--blue-light)', fontSize: '.9rem' }}>{loc.slots} verfügbar</div>
-                      <div style={{ fontSize: '.75rem', color: 'var(--gray-text)' }}>von 25 Slots</div>
+                      <div style={{ fontWeight: 700, color: free === 0 ? '#dc2626' : low ? '#f59e0b' : 'var(--blue-light)', fontSize: '.9rem' }}>
+                        {free === undefined ? '…' : free === 0 ? 'ausgebucht' : `${free} verfügbar`}
+                      </div>
+                      <div style={{ fontSize: '.75rem', color: 'var(--gray-text)' }}>{total !== undefined ? `von ${total} Slots` : ''}</div>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* KI Option */}
