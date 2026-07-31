@@ -25,6 +25,83 @@ function OrderInner() {
       .catch(() => {})
   }, [])
 
+  // --- EUROPAN-Zahlung (Single-Item-Variante des EUROPAN-Widget-Standards) ---
+  const [epEmail, setEpEmail] = useState('')
+  const [epPin, setEpPin] = useState('')
+  const [epChecking, setEpChecking] = useState(false)
+  const [epError, setEpError] = useState('')
+  const [epVerified, setEpVerified] = useState(false)
+  const [epBalance, setEpBalance] = useState<number | null>(null)
+  const [epBonusChoice, setEpBonusChoice] = useState<'now' | 'save'>('now')
+  const [epPaying, setEpPaying] = useState(false)
+  const [epResult, setEpResult] = useState<any>(null)
+
+  const EP_BONUS_PCT = 0.02
+  const EP_DOPPELWUMS_PCT = 0.03
+  const SETUP_FEE = 9.90
+
+  const epBonus = SETUP_FEE * EP_BONUS_PCT
+  const epBonusApplied = epBonusChoice === 'now' ? epBonus : 0
+  const epAfterBonus = Math.max(0, SETUP_FEE - epBonusApplied)
+  const epDoppelWums = SETUP_FEE * EP_DOPPELWUMS_PCT
+  const epFullyCovered = epVerified && epBalance !== null && epBalance >= epAfterBonus
+  const epDoppelWumsApplied = epFullyCovered ? epDoppelWums : 0
+  const epTotal = Math.max(0, epAfterBonus - epDoppelWumsApplied)
+  const epTotalSaved = SETUP_FEE - epTotal
+
+  const fmtEur = (n: number) => '€' + (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2).replace('.', ','))
+  const fmtEp = (n: number) => ')( ' + (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2).replace('.', ','))
+
+  const checkEuropanBalance = async () => {
+    setEpChecking(true)
+    setEpError('')
+    try {
+      const res = await fetch('/api/europan-balance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: epEmail, pin: epPin }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setEpVerified(true)
+        setEpBalance(data.balance)
+      } else {
+        setEpError(data.error || 'Prüfung fehlgeschlagen.')
+        setEpVerified(false)
+      }
+    } catch {
+      setEpError('Verbindungsfehler.')
+    } finally {
+      setEpChecking(false)
+    }
+  }
+
+  const payWithEuropan = async () => {
+    setEpPaying(true)
+    setEpError('')
+    try {
+      const res = await fetch('/api/europan-pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: epEmail, pin: epPin, anschluss: form.location,
+          bonusChoice: epBonusChoice, with_ki: form.with_ki,
+          company: form.company, name: form.name, phone: form.phone, notes: form.notes,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setEpResult(data)
+      } else {
+        setEpError(data.error || 'Zahlung fehlgeschlagen.')
+      }
+    } catch {
+      setEpError('Verbindungsfehler.')
+    } finally {
+      setEpPaying(false)
+    }
+  }
+
   const [form, setForm] = useState({
     location: '',
     with_ki: params.get('plan') === 'ki',
@@ -204,7 +281,31 @@ function OrderInner() {
           )}
 
           {/* STEP 3: Zusammenfassung & Zahlung */}
-          {step === 3 && (
+          {step === 3 && epResult && (
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 700, color: '#0d5c33', marginBottom: '1rem' }}>
+                ✅ Bezahlt mit EUROPAN — Ihre Nummer ist aktiv
+              </h2>
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '1.5rem', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.5rem' }}>
+                  <span style={{ color: 'var(--gray-text)' }}>Rufnummer</span>
+                  <strong>{epResult.fullNumber}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.5rem' }}>
+                  <span style={{ color: 'var(--gray-text)' }}>Bezahlt mit EUROPAN</span>
+                  <strong>{fmtEp(epResult.amount_paid)}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--gray-text)' }}>Neues Guthaben</span>
+                  <strong>{fmtEp(epResult.new_balance)}</strong>
+                </div>
+              </div>
+              <p style={{ fontSize: '.9rem', color: 'var(--gray-text)' }}>Ihre Zugangsdaten (PIN, SIP-Einrichtung) haben wir gerade an {form.email} gesendet.</p>
+              <a href="/" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>Zurück zur Startseite</a>
+            </div>
+          )}
+
+          {step === 3 && !epResult && (
             <div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--blue)', marginBottom: '1.5rem' }}>
                 Bestellung prüfen & bezahlen
@@ -256,12 +357,117 @@ function OrderInner() {
 
               {error && <div style={{ background: '#FEE2E2', color: '#991B1B', padding: '.75rem 1rem', borderRadius: 8, fontSize: '.85rem', marginBottom: '1rem' }}>{error}</div>}
 
+              {/* EUROPAN-Zahlung */}
+              <div style={{ border: '1.5px solid #E2E8F0', borderRadius: 10, padding: '1.5rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.75rem' }}>
+                  <div style={{ fontWeight: 700, color: 'var(--blue)' }}>Mit EUROPAN-Guthaben bezahlen</div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#e5f6ec', color: '#1b7a3d', fontSize: '.75rem', fontWeight: 600, padding: '.25rem .6rem', borderRadius: 100 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#1b7a3d', display: 'inline-block' }} />
+                    {epVerified ? 'Aktiv' : 'Bereit – anmelden'}
+                  </span>
+                </div>
+
+                {!epVerified && (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '.6rem', alignItems: 'end' }}>
+                      <div>
+                        <label style={labelStyle}>E-Mail (EUROPAN)</label>
+                        <input style={inputStyle} type="email" value={epEmail} onChange={e => setEpEmail(e.target.value)} placeholder="ihre@email.de" />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>PIN</label>
+                        <input style={inputStyle} maxLength={4} value={epPin} onChange={e => setEpPin(e.target.value.replace(/\D/g, ''))} placeholder="1234" />
+                      </div>
+                      <button className="btn-outline" style={{ color: 'var(--blue)', borderColor: 'var(--border)', whiteSpace: 'nowrap' }}
+                        onClick={checkEuropanBalance} disabled={epChecking || !epEmail || epPin.length !== 4}>
+                        {epChecking ? 'Prüfe…' : 'Guthaben prüfen'}
+                      </button>
+                    </div>
+                    <p style={{ fontSize: '.78rem', color: 'var(--gray-text)', marginTop: '.6rem' }}>
+                      Ihre PIN aus der EUROPAN-Bestellbestätigung. Noch kein Guthaben? <a href="https://europan.group/buy" target="_blank" style={{ color: 'var(--blue)', fontWeight: 600 }}>Auf europan.group aufladen →</a>
+                    </p>
+                  </>
+                )}
+
+                {epVerified && (
+                  <div>
+                    <div style={{ fontSize: '.85rem', color: 'var(--gray-text)', marginBottom: '1rem' }}>
+                      Ihr aktuelles EUROPAN-Guthaben beträgt <strong>{fmtEp(epBalance || 0)}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', fontSize: '.85rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                        <input type="radio" checked={epBonusChoice === 'now'} onChange={() => setEpBonusChoice('now')} />
+                        Jetzt für diese Bestellung einsetzen
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                        <input type="radio" checked={epBonusChoice === 'save'} onChange={() => setEpBonusChoice('save')} />
+                        Auf meinem Guthaben sparen
+                      </label>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem', fontSize: '.88rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--gray-text)' }}>Einrichtungsgebühr</span>
+                        <span>{fmtEur(SETUP_FEE)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--gray-text)' }}>EUROPAN-Bonus (2%)</span>
+                        <span>{epBonusChoice === 'now' ? `-${fmtEp(epBonus)}` : 'wird gespart'}</span>
+                      </div>
+                      {epFullyCovered ? (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#1b7a3d' }}>
+                          <span>Doppel-Wums-Bonus (3%)</span>
+                          <span>-{fmtEp(epDoppelWumsApplied)}</span>
+                        </div>
+                      ) : (
+                        <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 8, padding: '.6rem .8rem', fontSize: '.8rem', color: '#C2410C' }}>
+                          💡 Ihnen fehlen noch {fmtEp(Math.max(0, epAfterBonus - (epBalance || 0)))}, um diese Bestellung komplett zu decken und den Doppel-Wums-Bonus freizuschalten (zusätzlich {fmtEur(epDoppelWums)} Ersparnis).
+                        </div>
+                      )}
+                      {epFullyCovered && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--gray-text)' }}>Wird mit EUROPAN-Guthaben bezahlt</span>
+                          <span>-{fmtEur(epTotal)}</span>
+                        </div>
+                      )}
+                      {epTotalSaved > 0.004 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: '#1b7a3d' }}>
+                          <span>Sie sparen heute mit EUROPAN</span>
+                          <span>{fmtEur(epTotalSaved)}</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '.5rem', marginTop: '.3rem', fontWeight: 700 }}>
+                        <span>Gesamt</span>
+                        <span>{fmtEur(epTotal)}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      style={{
+                        width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '.875rem 2rem', borderRadius: 8, fontWeight: 600, fontSize: '.95rem', border: 'none', cursor: epFullyCovered ? 'pointer' : 'not-allowed',
+                        background: epFullyCovered ? '#0d5c33' : '#E2E8F0', color: epFullyCovered ? '#fff' : 'var(--gray-text)',
+                      }}
+                      onClick={payWithEuropan} disabled={!epFullyCovered || epPaying || !form.location}
+                    >
+                      {epPaying ? 'Wird bezahlt…' : `Jetzt mit EUROPAN bezahlen ${fmtEur(epTotal)}`}
+                    </button>
+                    {!form.location && <p style={{ fontSize: '.75rem', color: '#C2410C', marginTop: '.5rem' }}>Bitte zuerst einen Anschluss in Schritt 1 wählen.</p>}
+                  </div>
+                )}
+
+                {epError && <div style={{ background: '#FEE2E2', color: '#991B1B', padding: '.6rem .8rem', borderRadius: 8, fontSize: '.82rem', marginTop: '.75rem' }}>{epError}</div>}
+              </div>
+
+              <div style={{ textAlign: 'center', fontSize: '.8rem', color: 'var(--gray-text)', margin: '1rem 0' }}>— oder —</div>
+
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button className="btn-outline" style={{ color: 'var(--blue)', borderColor: 'var(--border)', flex: 1, justifyContent: 'center' }}
                   onClick={() => setStep(2)}>← Zurück</button>
                 <button className="btn-primary" style={{ flex: 2, justifyContent: 'center' }}
                   onClick={handleCheckout} disabled={loading}>
-                  {loading ? 'Weiterleitung…' : `Jetzt zahlen €${setupFee.toFixed(2)} →`}
+                  {loading ? 'Weiterleitung…' : `Mit Karte zahlen €${setupFee.toFixed(2)} →`}
                 </button>
               </div>
               <div style={{ textAlign: 'center', marginTop: '.75rem', fontSize: '.75rem', color: 'var(--gray-text)' }}>
