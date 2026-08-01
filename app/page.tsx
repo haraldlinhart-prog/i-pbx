@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import ContactForm from './ContactForm'
+import AvailableNumbers from './AvailableNumbers'
 
 export default function Home() {
   return (
@@ -56,30 +57,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(0,180,216,.25)', borderRadius: 'var(--radius-lg)', padding: '2rem', backdropFilter: 'blur(10px)' }}>
-            <div style={{ fontSize: '.7rem', fontWeight: 700, letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--cyan)', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(0,180,216,.2)' }}>
-              Verfügbare Rufnummern
-            </div>
-            {[
-              { label: 'Frankfurt (069) · Anschluss 1', slots: 10, total: 25 },
-              { label: 'Frankfurt (069) · Anschluss 2', slots: 22, total: 25 },
-              { label: 'Berlin (030) · Anschluss 1', slots: 23, total: 25 },
-              { label: 'Berlin (030) · Anschluss 2', slots: 23, total: 25 },
-            ].map((item, i) => (
-              <div key={i} style={{ marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.35rem' }}>
-                  <span style={{ fontSize: '.82rem', color: 'rgba(255,255,255,.8)' }}>{item.label}</span>
-                  <span style={{ fontSize: '.78rem', color: item.slots < 5 ? '#f59e0b' : 'var(--cyan)', fontWeight: 600 }}>{item.slots} frei</span>
-                </div>
-                <div style={{ height: 5, background: 'rgba(255,255,255,.1)', borderRadius: 3 }}>
-                  <div style={{ height: '100%', width: (item.slots / item.total * 100) + '%', background: item.slots < 5 ? '#f59e0b' : 'var(--cyan)', borderRadius: 3 }} />
-                </div>
-              </div>
-            ))}
-            <Link href="/order" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
-              Nummer jetzt sichern →
-            </Link>
-          </div>
+          <AvailableNumbers />
         </div>
       </section>
 
