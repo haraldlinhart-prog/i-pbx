@@ -77,6 +77,10 @@ function OrderInner() {
   }
 
   const payWithEuropan = async () => {
+    if (form.with_ki && !form.department_keyword.trim()) {
+      setEpError('Bitte ein Fallback-Stichwort (z.B. Ihre Abteilung) angeben — wichtig, falls der KI-Assistent Ihren Namen mal nicht versteht.')
+      return
+    }
     setEpPaying(true)
     setEpError('')
     try {
@@ -87,6 +91,7 @@ function OrderInner() {
           email: epEmail, pin: epPin, anschluss: form.location,
           bonusChoice: epBonusChoice, with_ki: form.with_ki,
           company: form.company, name: form.name, phone: form.phone, notes: form.notes,
+          department_keyword: form.department_keyword,
         }),
       })
       const data = await res.json()
@@ -110,6 +115,7 @@ function OrderInner() {
     email: '',
     phone: '',
     notes: '',
+    department_keyword: '',
   })
 
   const selectedLocation = LOCATIONS.find(l => l.id === form.location)
@@ -119,6 +125,10 @@ function OrderInner() {
   const totalMonthly = monthlyBase + monthlyKI
 
   const handleCheckout = async () => {
+    if (form.with_ki && !form.department_keyword.trim()) {
+      setError('Bitte ein Fallback-Stichwort (z.B. Ihre Abteilung) angeben — wichtig, falls der KI-Assistent Ihren Namen mal nicht versteht.')
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -260,6 +270,17 @@ function OrderInner() {
                     <input style={inputStyle} value={form.phone} onChange={e => setForm(p => ({...p, phone: e.target.value}))} placeholder="+49 XXX XXXXXXX" />
                   </div>
                 </div>
+                {form.with_ki && (
+                  <div style={{ background: '#EFF6FF', border: '1px solid var(--blue-light)', borderRadius: 8, padding: '1rem 1.1rem' }}>
+                    <label style={labelStyle}>Fallback-Stichwort für den KI-Assistenten *</label>
+                    <input required style={inputStyle} value={form.department_keyword}
+                      onChange={e => setForm(p => ({...p, department_keyword: e.target.value}))}
+                      placeholder="z.B. Ihre Abteilung oder ein eindeutiges Kennwort" />
+                    <p style={{ fontSize: '.78rem', color: 'var(--text-light)', marginTop: '.4rem', marginBottom: 0 }}>
+                      Falls unser KI-Assistent Ihren Namen am Telefon einmal nicht versteht, fragt er stattdessen nach diesem Stichwort — muss auf Ihrem Anschluss einzigartig sein.
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label style={labelStyle}>E-Mail *</label>
                   <input type="email" required style={inputStyle} value={form.email} onChange={e => setForm(p => ({...p, email: e.target.value}))} placeholder="ihre@email.de" />

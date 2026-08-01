@@ -16,7 +16,7 @@ const DOPPELWUMS_BONUS_PCT = 0.03
 // diese Route ist die einzige Stelle, die die PIN vor dem Debit verifiziert.
 // Der Rabatt-/Zahlbetrag wird ausschließlich serverseitig berechnet.
 export async function POST(req: NextRequest) {
-  const { email, pin, anschluss, bonusChoice, with_ki, company, name, phone, notes } =
+  const { email, pin, anschluss, bonusChoice, with_ki, company, name, phone, notes, department_keyword } =
     await req.json().catch(() => ({}))
 
   if (!email || !pin || !anschluss || !name) {
@@ -30,6 +30,22 @@ export async function POST(req: NextRequest) {
   }
   if (!NOBLE_API_KEY) {
     return NextResponse.json({ error: 'Not configured' }, { status: 500 })
+  }
+  if (with_ki && !String(department_keyword || '').trim()) {
+    return NextResponse.json({ error: 'Für den KI-Assistenten wird ein Fallback-Stichwort (z.B. Ihre Abteilung) benötigt.' }, { status: 400 })
+  }
+  if (with_ki) {
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    const { data: existing } = await supabase
+      .from('ipbx_directory')
+      .select('id')
+      .eq('anschluss', anschluss)
+      .ilike('department', department_keyword.trim())
+      .limit(1)
+    if (existing && existing.length > 0) {
+      return NextResponse.json({ error: `Das Stichwort "${department_keyword}" ist auf diesem Anschluss schon vergeben. Bitte ein anderes wählen.` }, { status: 409 })
+    }
   }
 
   // 0. PIN verifizieren + echten Kontostand holen — nie dem Client vertrauen
@@ -106,6 +122,7 @@ export async function POST(req: NextRequest) {
       company: company || '',
       phone,
       with_ki: Boolean(with_ki),
+      departmentKeyword: department_keyword,
       monthlyFeeCents: with_ki ? 2480 : 490,
       notes,
       paymentMethod: 'europan',

@@ -30,6 +30,42 @@ function generatePin(): string {
   return String(Math.floor(10000 + Math.random() * 90000))
 }
 
+// Wandelt "069 9001280" + "047" in "+4969900128047" um (fürs Transfer-Ziel des KI-Assistenten)
+function toE164(anschluss: string, nrStr: string): string {
+  const info = ANSCHLUESSE[anschluss]
+  const localDigits = info.nr.replace(/\D/g, '').replace(/^0/, '')
+  return `+49${localDigits}${nrStr}`
+}
+
+async function upsertDirectoryEntry(params: {
+  anschluss: string
+  name: string
+  company: string
+  departmentKeyword: string
+  nrStr: string
+  forwardNumber: string
+}) {
+  const supabase = getSupabase()
+  const aliases = [params.name, `Herr ${params.name}`, `Frau ${params.name}`].filter(Boolean)
+  const { error } = await supabase.from('ipbx_directory').insert({
+    anschluss: params.anschluss,
+    company_name: params.company || params.name, // Begrüßungsname (Altfeld, für Rückwärtskompatibilität)
+    employee_name: params.name,
+    company_display_name: params.company || null,
+    aliases,
+    department: params.departmentKeyword,
+    durchwahl: params.nrStr,
+    extension: params.forwardNumber,
+    transfer_type: 'phone',
+    active: true,
+  })
+  if (error) {
+    console.error('ipbx_directory insert error:', error)
+    return false
+  }
+  return true
+}
+
 async function getNextFreeNumber(anschluss: string): Promise<number | null> {
   const { data } = await getSupabase()
     .from('ipbx_numbers')
@@ -106,7 +142,7 @@ async function sendWelcomeMail(
   ${with_ki ? `
   <div style="background:#f0fdf4;border-radius:8px;padding:1.25rem;margin:1rem 0;border-left:4px solid #22c55e">
     <div style="font-weight:700;color:#15803d;margin-bottom:.5rem">🤖 KI-Assistent (Famulor)</div>
-    <p style="color:#166534;font-size:.85rem;margin:0">Ihr KI-Assistent wird in den nächsten 24 Stunden separat konfiguriert. Sie erhalten eine weitere E-Mail mit den Einstellungen.</p>
+    <p style="color:#166534;font-size:.85rem;margin:0">Ihre Nebenstelle ist ab sofort über unsere KI-Telefonzentrale erreichbar. Anrufer können nach Ihrem Namen, Ihrem Firmennamen${company ? ` ("${company}")` : ''} oder direkt nach Ihrer Durchwahl fragen.</p>
   </div>` : ''}
   <div style="background:#fff3e0;border-radius:8px;padding:1.25rem;margin:1rem 0">
     <div style="font-weight:700;color:#e65100;margin-bottom:.5rem">📱 SIP/VoIP Einrichtung</div>
@@ -128,6 +164,7 @@ export interface FulfillParams {
   company: string
   phone?: string
   with_ki: boolean
+  departmentKeyword?: string // Pflicht, wenn with_ki=true — Fallback-Stichwort für den KI-Assistenten
   monthlyFeeCents: number
   notes?: string
   paymentMethod: 'stripe' | 'europan'
@@ -187,6 +224,21 @@ export async function fulfillOrder(p: FulfillParams) {
     await getSupabase().from('ipbx_orders').update({ status: 'failed' }).eq('id', order?.id)
   }
 
+  let directoryEntryCreated = false
+  if (provisioned && p.with_ki) {
+    directoryEntryCreated = await upsertDirectoryEntry({
+      anschluss: p.anschluss,
+      name: p.name,
+      company: p.company,
+      departmentKeyword: p.departmentKeyword || p.name,
+      nrStr: String(nr).padStart(info.digits, '0'),
+      forwardNumber: toE164(p.anschluss, String(nr).padStart(info.digits, '0')),
+    })
+    if (!directoryEntryCreated) {
+      await getSupabase().from('ipbx_orders').update({ notes: `${p.notes || ''}\n[WARNUNG] Verzeichniseintrag für KI-Assistent fehlgeschlagen (evtl. Fallback-Stichwort schon vergeben) — bitte manuell prüfen.` }).eq('id', order?.id)
+    }
+  }
+
   const sessionUrl = await getSessionLink(p.email)
   await sendWelcomeMail(p.name, p.email, p.company, p.anschluss, nr, pin, p.with_ki, sessionUrl, p.paymentNote)
 
@@ -201,10 +253,11 @@ export async function fulfillOrder(p: FulfillParams) {
       <b>Anschluss:</b> ${info.label} (${info.nr}-${nrStr})<br>
       <b>PIN:</b> ${pin}<br>
       <b>KI-Assistent:</b> ${p.with_ki ? 'Ja' : 'Nein'}<br>
+      ${p.with_ki ? `<b>Fallback-Stichwort:</b> ${p.departmentKeyword || '–'}<br><b>Verzeichniseintrag:</b> ${directoryEntryCreated ? '✅ automatisch angelegt' : '⚠️ FEHLGESCHLAGEN — bitte manuell prüfen'}<br>` : ''}
       <b>Zahlungsart:</b> ${p.paymentMethod === 'europan' ? 'EUROPAN-Guthaben' : 'Stripe (Karte)'}<br>
       <b>Referenz:</b> ${p.paymentRef}</p>
       ${!provisioned ? '<p style="color:red"><b>⚠️ Provisionierung fehlgeschlagen! Bitte manuell anlegen.</b></p>' : ''}`,
   })
 
-  return { ok: true, anschluss: p.anschluss, nr, nrStr, fullNumber: `${info.nr}-${nrStr}`, pin, provisioned }
+  return { ok: true, anschluss: p.anschluss, nr, nrStr, fullNumber: `${info.nr}-${nrStr}`, pin, provisioned, directoryEntryCreated }
 }

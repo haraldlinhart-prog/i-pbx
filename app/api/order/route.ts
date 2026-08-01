@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { Resend } from 'resend'
+import { createClient } from '@supabase/supabase-js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
 const resend = new Resend(process.env.RESEND_API_KEY!)
+
+function getSupabase() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+}
 
 const LOCATION_LABELS: Record<string, string> = {
   ffm1: 'Frankfurt Anschluss 1 (069)',
@@ -15,10 +20,24 @@ const LOCATION_LABELS: Record<string, string> = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { location, with_ki, company, name, email, phone, notes } = body
+    const { location, with_ki, company, name, email, phone, notes, department_keyword } = body
 
     if (!location || !name || !email) {
       return NextResponse.json({ error: 'Pflichtfelder fehlen' }, { status: 400 })
+    }
+    if (with_ki && !String(department_keyword || '').trim()) {
+      return NextResponse.json({ error: 'Für den KI-Assistenten wird ein Fallback-Stichwort (z.B. Ihre Abteilung) benötigt.' }, { status: 400 })
+    }
+    if (with_ki) {
+      const { data: existing } = await getSupabase()
+        .from('ipbx_directory')
+        .select('id')
+        .eq('anschluss', location)
+        .ilike('department', department_keyword.trim())
+        .limit(1)
+      if (existing && existing.length > 0) {
+        return NextResponse.json({ error: `Das Stichwort "${department_keyword}" ist auf diesem Anschluss schon vergeben. Bitte ein anderes wählen.` }, { status: 409 })
+      }
     }
 
     const locationLabel = LOCATION_LABELS[location] || location
@@ -53,6 +72,7 @@ export async function POST(req: NextRequest) {
         email,
         phone: phone || '',
         notes: notes || '',
+        department_keyword: department_keyword || '',
         monthly_fee: monthlyFee.toString(),
       },
     })
@@ -67,6 +87,7 @@ export async function POST(req: NextRequest) {
         <table style="border-collapse:collapse;width:100%">
           <tr><td style="padding:8px;font-weight:bold">Standort:</td><td style="padding:8px">${locationLabel}</td></tr>
           <tr><td style="padding:8px;font-weight:bold">KI-Assistent:</td><td style="padding:8px">${with_ki ? 'Ja (Famulor) +€19,90/Mo' : 'Nein'}</td></tr>
+          ${with_ki ? `<tr><td style="padding:8px;font-weight:bold">Fallback-Stichwort:</td><td style="padding:8px">${department_keyword}</td></tr>` : ''}
           <tr><td style="padding:8px;font-weight:bold">Unternehmen:</td><td style="padding:8px">${company || '–'}</td></tr>
           <tr><td style="padding:8px;font-weight:bold">Name:</td><td style="padding:8px">${name}</td></tr>
           <tr><td style="padding:8px;font-weight:bold">E-Mail:</td><td style="padding:8px">${email}</td></tr>
