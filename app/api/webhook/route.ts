@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       company,
       phone: meta.phone,
       with_ki,
+      desiredNr: meta.desired_nr ? parseInt(meta.desired_nr) : null,
       departmentKeyword: meta.department_keyword,
       monthlyFeeCents: monthly,
       notes: meta.notes,

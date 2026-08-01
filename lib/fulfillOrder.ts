@@ -66,8 +66,24 @@ async function upsertDirectoryEntry(params: {
   return true
 }
 
-async function getNextFreeNumber(anschluss: string): Promise<number | null> {
-  const { data } = await getSupabase()
+async function getNextFreeNumber(anschluss: string, desiredNr?: number | null): Promise<number | null> {
+  const supabase = getSupabase()
+
+  if (desiredNr !== undefined && desiredNr !== null) {
+    const { data: desired } = await supabase
+      .from('ipbx_numbers')
+      .select('nr')
+      .eq('anschluss', anschluss)
+      .eq('nr', desiredNr)
+      .eq('status', 'free')
+      .limit(1)
+    if (desired && desired.length > 0) {
+      return desired[0].nr
+    }
+    // Wunschnummer war zwischenzeitlich vergeben — auf nächste freie ausweichen
+  }
+
+  const { data } = await supabase
     .from('ipbx_numbers')
     .select('nr')
     .eq('anschluss', anschluss)
@@ -164,6 +180,7 @@ export interface FulfillParams {
   company: string
   phone?: string
   with_ki: boolean
+  desiredNr?: number | null // vom Kunden gewählte Wunschnummer (fällt auf nächste freie zurück, falls inzwischen vergeben)
   departmentKeyword?: string // Pflicht, wenn with_ki=true — Fallback-Stichwort für den KI-Assistenten
   monthlyFeeCents: number
   notes?: string
@@ -176,7 +193,8 @@ export async function fulfillOrder(p: FulfillParams) {
   const info = ANSCHLUESSE[p.anschluss]
   if (!info) throw new Error(`Unbekannter Anschluss: ${p.anschluss}`)
 
-  const nr = await getNextFreeNumber(p.anschluss)
+  const nr = await getNextFreeNumber(p.anschluss, p.desiredNr)
+  const gotDesiredNumber = p.desiredNr !== undefined && p.desiredNr !== null && nr === p.desiredNr
   if (nr === null) {
     await resend.emails.send({
       from: 'noreply@pan21.com',
@@ -240,7 +258,10 @@ export async function fulfillOrder(p: FulfillParams) {
   }
 
   const sessionUrl = await getSessionLink(p.email)
-  await sendWelcomeMail(p.name, p.email, p.company, p.anschluss, nr, pin, p.with_ki, sessionUrl, p.paymentNote)
+  const desiredNumberNote = (p.desiredNr !== undefined && p.desiredNr !== null && !gotDesiredNumber)
+    ? 'Ihre gewünschte Wunschnummer war leider zwischenzeitlich bereits vergeben — wir haben Ihnen stattdessen die nächste verfügbare Nummer zugeteilt. '
+    : ''
+  await sendWelcomeMail(p.name, p.email, p.company, p.anschluss, nr, pin, p.with_ki, sessionUrl, desiredNumberNote + p.paymentNote)
 
   const nrStr = String(nr).padStart(info.digits, '0')
   await resend.emails.send({
@@ -254,10 +275,11 @@ export async function fulfillOrder(p: FulfillParams) {
       <b>PIN:</b> ${pin}<br>
       <b>KI-Assistent:</b> ${p.with_ki ? 'Ja' : 'Nein'}<br>
       ${p.with_ki ? `<b>Fallback-Stichwort:</b> ${p.departmentKeyword || '–'}<br><b>Verzeichniseintrag:</b> ${directoryEntryCreated ? '✅ automatisch angelegt' : '⚠️ FEHLGESCHLAGEN — bitte manuell prüfen'}<br>` : ''}
+      ${p.desiredNr ? `<b>Wunschnummer:</b> ${p.desiredNr} ${gotDesiredNumber ? '✅ erhalten' : '⚠️ war vergeben, Ausweichnummer zugeteilt'}<br>` : ''}
       <b>Zahlungsart:</b> ${p.paymentMethod === 'europan' ? 'EUROPAN-Guthaben' : 'Stripe (Karte)'}<br>
       <b>Referenz:</b> ${p.paymentRef}</p>
       ${!provisioned ? '<p style="color:red"><b>⚠️ Provisionierung fehlgeschlagen! Bitte manuell anlegen.</b></p>' : ''}`,
   })
 
-  return { ok: true, anschluss: p.anschluss, nr, nrStr, fullNumber: `${info.nr}-${nrStr}`, pin, provisioned, directoryEntryCreated }
+  return { ok: true, anschluss: p.anschluss, nr, nrStr, fullNumber: `${info.nr}-${nrStr}`, pin, provisioned, directoryEntryCreated, gotDesiredNumber }
 }

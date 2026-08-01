@@ -16,7 +16,7 @@ const DOPPELWUMS_BONUS_PCT = 0.03
 // diese Route ist die einzige Stelle, die die PIN vor dem Debit verifiziert.
 // Der Rabatt-/Zahlbetrag wird ausschließlich serverseitig berechnet.
 export async function POST(req: NextRequest) {
-  const { email, pin, anschluss, bonusChoice, with_ki, company, name, phone, notes, department_keyword } =
+  const { email, pin, anschluss, bonusChoice, with_ki, company, name, phone, notes, department_keyword, desired_nr } =
     await req.json().catch(() => ({}))
 
   if (!email || !pin || !anschluss || !name) {
@@ -122,6 +122,7 @@ export async function POST(req: NextRequest) {
       company: company || '',
       phone,
       with_ki: Boolean(with_ki),
+      desiredNr: desired_nr !== undefined && desired_nr !== null ? parseInt(desired_nr) : null,
       departmentKeyword: department_keyword,
       monthlyFeeCents: with_ki ? 2480 : 490,
       notes,

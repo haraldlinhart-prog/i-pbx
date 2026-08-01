@@ -20,7 +20,7 @@ const LOCATION_LABELS: Record<string, string> = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { location, with_ki, company, name, email, phone, notes, department_keyword } = body
+    const { location, with_ki, company, name, email, phone, notes, department_keyword, desired_nr } = body
 
     if (!location || !name || !email) {
       return NextResponse.json({ error: 'Pflichtfelder fehlen' }, { status: 400 })
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
         phone: phone || '',
         notes: notes || '',
         department_keyword: department_keyword || '',
+        desired_nr: desired_nr !== undefined && desired_nr !== null ? String(desired_nr) : '',
         monthly_fee: monthlyFee.toString(),
       },
     })
@@ -88,6 +89,7 @@ export async function POST(req: NextRequest) {
           <tr><td style="padding:8px;font-weight:bold">Standort:</td><td style="padding:8px">${locationLabel}</td></tr>
           <tr><td style="padding:8px;font-weight:bold">KI-Assistent:</td><td style="padding:8px">${with_ki ? 'Ja (Famulor) +€19,90/Mo' : 'Nein'}</td></tr>
           ${with_ki ? `<tr><td style="padding:8px;font-weight:bold">Fallback-Stichwort:</td><td style="padding:8px">${department_keyword}</td></tr>` : ''}
+          ${desired_nr ? `<tr><td style="padding:8px;font-weight:bold">Wunschnummer:</td><td style="padding:8px">${desired_nr}</td></tr>` : ''}
           <tr><td style="padding:8px;font-weight:bold">Unternehmen:</td><td style="padding:8px">${company || '–'}</td></tr>
           <tr><td style="padding:8px;font-weight:bold">Name:</td><td style="padding:8px">${name}</td></tr>
           <tr><td style="padding:8px;font-weight:bold">E-Mail:</td><td style="padding:8px">${email}</td></tr>

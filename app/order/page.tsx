@@ -17,6 +17,8 @@ function OrderInner() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [availability, setAvailability] = useState<Availability>({})
+  const [freeNumbers, setFreeNumbers] = useState<{ nr: number; display: string }[]>([])
+  const [numbersLoading, setNumbersLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/availability')
@@ -24,6 +26,16 @@ function OrderInner() {
       .then(data => setAvailability(data))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!form.location) { setFreeNumbers([]); return }
+    setNumbersLoading(true)
+    fetch('/api/free-numbers?anschluss=' + form.location)
+      .then(r => r.json())
+      .then(data => setFreeNumbers(data.numbers || []))
+      .catch(() => setFreeNumbers([]))
+      .finally(() => setNumbersLoading(false))
+  }, [form.location])
 
   // --- EUROPAN-Zahlung (Single-Item-Variante des EUROPAN-Widget-Standards) ---
   const [epEmail, setEpEmail] = useState('')
@@ -92,6 +104,7 @@ function OrderInner() {
           bonusChoice: epBonusChoice, with_ki: form.with_ki,
           company: form.company, name: form.name, phone: form.phone, notes: form.notes,
           department_keyword: form.department_keyword,
+          desired_nr: form.desired_nr,
         }),
       })
       const data = await res.json()
@@ -116,6 +129,7 @@ function OrderInner() {
     phone: '',
     notes: '',
     department_keyword: '',
+    desired_nr: null as number | null,
   })
 
   const selectedLocation = LOCATIONS.find(l => l.id === form.location)
@@ -170,9 +184,37 @@ function OrderInner() {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <a href="/" style={{ color: 'var(--gray-text)', fontSize: '.85rem' }}>← Zurück zur Startseite</a>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, color: 'var(--blue)', margin: '1rem 0 .25rem' }}>
-            Rufnummer einrichten
+            Ihr 24-Stunden-Office-Service
           </h1>
-          <p style={{ color: 'var(--gray-text)', fontSize: '.9rem' }}>Deutsche VoIP-Nummer in 3 Schritten — sofort aktiv</p>
+          <p style={{ color: 'var(--gray-text)', fontSize: '.9rem' }}>Nicht nur eine Rufnummer — eine echte Telefonzentrale, die für Sie erreichbar ist</p>
+        </div>
+
+        <div style={{ background: 'linear-gradient(135deg,#0f2b5b,#1a4a9b)', borderRadius: 16, padding: '2rem 2.25rem', marginBottom: '1.5rem', color: 'white' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, marginBottom: '.9rem' }}>
+            Was Sie hier eigentlich bekommen
+          </h2>
+          <p style={{ fontSize: '.92rem', lineHeight: 1.7, color: 'rgba(255,255,255,.92)', marginBottom: '1rem' }}>
+            Eine deutsche Telefonnummer allein macht noch keinen professionellen Auftritt. Deshalb bieten wir mehr: Ihre Nummer ist Teil einer <strong>echten 24-Stunden-Telefonzentrale</strong>.
+            Wenn jemand anruft, meldet sich unser KI-gestützter Empfang — genau wie bei einer großen, etablierten Firma — und verbindet den Anrufer direkt zu Ihnen durch, egal ob Sie über die IRIS-App,
+            ein Tischtelefon oder unterwegs erreichbar sind.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginTop: '1.25rem' }}>
+            <div style={{ background: 'rgba(255,255,255,.08)', borderRadius: 10, padding: '1rem 1.1rem' }}>
+              <div style={{ fontSize: '1.3rem', marginBottom: '.4rem' }}>☎️</div>
+              <div style={{ fontWeight: 700, fontSize: '.88rem', marginBottom: '.3rem' }}>Professionelle Zentrale</div>
+              <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.75)', lineHeight: 1.5 }}>Anrufer werden namentlich begrüßt und direkt zu Ihnen oder Ihrer Abteilung durchgestellt — wie bei einem großen Unternehmen mit eigenem Empfang.</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,.08)', borderRadius: 10, padding: '1rem 1.1rem' }}>
+              <div style={{ fontSize: '1.3rem', marginBottom: '.4rem' }}>🌍</div>
+              <div style={{ fontWeight: 700, fontSize: '.88rem', marginBottom: '.3rem' }}>Rund um die Uhr erreichbar</div>
+              <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.75)', lineHeight: 1.5 }}>Kein Anruf geht verloren, auch nachts oder am Wochenende — die Zentrale nimmt jederzeit ab und leitet weiter oder notiert eine Nachricht.</div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,.08)', borderRadius: 10, padding: '1rem 1.1rem' }}>
+              <div style={{ fontSize: '1.3rem', marginBottom: '.4rem' }}>📱</div>
+              <div style={{ fontWeight: 700, fontSize: '.88rem', marginBottom: '.3rem' }}>Erreichbar, wo Sie sind</div>
+              <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,.75)', lineHeight: 1.5 }}>Über die kostenlose IRIS-App auf dem Smartphone oder ein Tischtelefon — Ihre Durchwahl klingelt dort, wo Sie gerade sind.</div>
+            </div>
+          </div>
         </div>
 
         {/* Progress */}
@@ -221,6 +263,46 @@ function OrderInner() {
                   )
                 })}
               </div>
+
+              {form.location && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={labelStyle}>Rufnummer</label>
+                  <div
+                    onClick={() => setForm(p => ({...p, desired_nr: null}))}
+                    style={{
+                      border: '1.5px solid ' + (form.desired_nr === null ? 'var(--blue-light)' : 'var(--border)'),
+                      borderRadius: 8, padding: '.7rem 1rem', marginBottom: '.6rem', cursor: 'pointer',
+                      background: form.desired_nr === null ? '#EFF6FF' : 'white', fontSize: '.88rem',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    }}>
+                    <span>🎲 Automatisch zuteilen (nächste freie Nummer)</span>
+                    {form.desired_nr === null && <span style={{ color: 'var(--blue-light)', fontWeight: 700 }}>✓</span>}
+                  </div>
+
+                  {numbersLoading ? (
+                    <div style={{ fontSize: '.82rem', color: 'var(--gray-text)', padding: '.5rem' }}>Lade verfügbare Nummern …</div>
+                  ) : freeNumbers.length > 0 && (
+                    <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 8, padding: '.5rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '.4rem' }}>
+                        {freeNumbers.map(n => (
+                          <div key={n.nr} onClick={() => setForm(p => ({...p, desired_nr: n.nr}))}
+                            style={{
+                              border: '1.5px solid ' + (form.desired_nr === n.nr ? 'var(--blue-light)' : 'var(--border)'),
+                              borderRadius: 6, padding: '.5rem .7rem', cursor: 'pointer', fontSize: '.82rem',
+                              background: form.desired_nr === n.nr ? '#EFF6FF' : 'white', textAlign: 'center',
+                              fontWeight: form.desired_nr === n.nr ? 700 : 400,
+                            }}>
+                            {n.display}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <p style={{ fontSize: '.75rem', color: 'var(--gray-text)', marginTop: '.4rem' }}>
+                    Wunschnummer wird bis zum Zahlungsabschluss für Sie reserviert, aber nicht garantiert — bei sehr schneller Doppelbuchung erhalten Sie automatisch die nächste freie Nummer.
+                  </p>
+                </div>
+              )}
 
               {/* KI Option */}
               <div style={{ border: '2px solid ' + (form.with_ki ? 'var(--blue-light)' : 'var(--border)'), borderRadius: 10, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', cursor: 'pointer', background: form.with_ki ? '#EFF6FF' : 'white', transition: 'all .2s' }}
