@@ -20,6 +20,18 @@ function OrderInner() {
   const [freeNumbers, setFreeNumbers] = useState<{ nr: number; display: string }[]>([])
   const [numbersLoading, setNumbersLoading] = useState(false)
 
+  const [form, setForm] = useState({
+    location: '',
+    with_ki: params.get('plan') === 'ki',
+    company: '',
+    name: '',
+    email: '',
+    phone: '',
+    notes: '',
+    department_keyword: '',
+    desired_nr: null as number | null,
+  })
+
   useEffect(() => {
     fetch('/api/availability')
       .then(r => r.json())
@@ -119,18 +131,6 @@ function OrderInner() {
       setEpPaying(false)
     }
   }
-
-  const [form, setForm] = useState({
-    location: '',
-    with_ki: params.get('plan') === 'ki',
-    company: '',
-    name: '',
-    email: '',
-    phone: '',
-    notes: '',
-    department_keyword: '',
-    desired_nr: null as number | null,
-  })
 
   const selectedLocation = LOCATIONS.find(l => l.id === form.location)
   const setupFee = 9.90
