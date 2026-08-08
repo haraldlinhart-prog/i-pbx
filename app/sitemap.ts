@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const BASE_URL = 'https://i-pbx.eu'
+const BASE_URL = 'https://www.i-pbx.eu'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
