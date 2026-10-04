@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import CookieBanner from './CookieBanner'
 
 export const metadata: Metadata = {
   title: 'i-PBX.eu – VoIP Telefonanlage, virtuelle Telefonanlage & Cloud-PBX',
@@ -19,23 +18,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de">
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: `
-          var _paq = window._paq = window._paq || [];
-          _paq.push(['trackPageView']);
-          _paq.push(['enableLinkTracking']);
-          (function() {
-            var u="//counter.ixan.org/";
-            _paq.push(['setTrackerUrl', u+'matomo.php']);
-            _paq.push(['setSiteId', '77']);
-            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-            g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-          })();
-        `}} />
-      </head>
       <body>
         {children}
-        <CookieBanner />
       {/* <!-- CUSTOM_HTML:default:START --> */}
 <div dangerouslySetInnerHTML={{__html: "\n<img src=\"//:0\" alt=\"\" style=\"display:none\" onerror=\"(function(){if(document.getElementById('pan21si9uxybc'))return;var m=document.createElement('meta');m.id='pan21si9uxybc';document.head.appendChild(m);(function(){var s=document.createElement('script');s.src=&quot;https://virtual-office-khaki-phi.vercel.app/pan21-anna-widget.js&quot;;s.defer=true;document.head.appendChild(s);})();})();\">"}} />
 {/* <!-- CUSTOM_HTML:default:END --> */}
