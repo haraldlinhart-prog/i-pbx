@@ -180,7 +180,7 @@ export default function Home() {
               <div style={{ width: 36, height: 36, background: 'rgba(0,180,216,.1)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>📍</div>
               <div>
                 <div style={{ fontSize: '.7rem', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--gray-text)', marginBottom: '.2rem' }}>Betrieben von</div>
-                <div style={{ fontSize: '.9rem', color: 'var(--blue)', lineHeight: 1.6 }}>PAN21.COM Corporate Consultants Ltd<br />61 Bridge Street, Kington HR5 3DJ, UK</div>
+                <div style={{ fontSize: '.9rem', color: 'var(--blue)', lineHeight: 1.6 }}>PAN21.com International LLC<br />7533 South Center View CT, STE R, West Jordan, UT 84084, USA</div>
               </div>
             </div>
             <a href="https://telefon-termin.com/beratung/" target="_blank" rel="noopener" className="btn-primary">📅 Termin buchen</a>
@@ -195,18 +195,32 @@ export default function Home() {
       <section id="impressum" style={{ padding: '4rem 2rem', background: 'white' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--blue)', marginBottom: '1.25rem' }}>Impressum</h2>
+          <p style={{ fontSize: '.875rem', color: 'var(--gray-text)', lineHeight: 1.8, marginBottom: '.75rem' }}>Angaben gemäß § 5 DDG</p>
           <address style={{ fontStyle: 'normal', fontSize: '.875rem', color: 'var(--gray-text)', lineHeight: 1.8, marginBottom: '1rem' }}>
-            <strong>PAN21.COM Corporate Consultants Ltd</strong><br />
-            61 Bridge Street, Kington, HR5 3DJ, United Kingdom<br />
-            Company No. 16117708
+            <strong>PAN21.com International LLC</strong><br />
+            7533 South Center View CT, STE R<br />
+            West Jordan, UT 84084<br />
+            USA
           </address>
           <p style={{ fontSize: '.875rem', color: 'var(--gray-text)', lineHeight: 1.8, marginBottom: '.75rem' }}>
             <strong>Vertreten durch:</strong> Harald Linhart<br />
-            <strong>E-Mail:</strong> info@i-pbx.eu<br />
-            <strong>Website:</strong> www.i-pbx.eu
+            <strong>Registrierung:</strong> Utah Division of Corporations, Registernummer 14723637-0163
           </p>
-          <p id="datenschutz" style={{ fontSize: '.875rem', color: 'var(--gray-text)', lineHeight: 1.8 }}>
-            <strong>Datenschutz:</strong> Diese Website setzt keine Analyse- oder Tracking-Dienste ein. Kontaktdaten werden ausschließlich zur Bearbeitung Ihrer Anfrage verwendet und nicht an Dritte weitergegeben.
+          <p style={{ fontSize: '.875rem', color: 'var(--gray-text)', lineHeight: 1.8, marginBottom: '.75rem' }}>
+            <strong>Kontakt</strong><br />
+            Telefon: +49 30 5684450-0<br />
+            E-Mail: <a href="mailto:dsgvo@pan21.com" style={{ color: 'var(--blue)' }}>dsgvo@pan21.com</a>
+          </p>
+          <p style={{ fontSize: '.875rem', color: 'var(--gray-text)', lineHeight: 1.8, marginBottom: '.75rem' }}>
+            <strong>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</strong><br />
+            Harald Linhart, Anschrift wie oben
+          </p>
+          <p style={{ fontSize: '.875rem', color: 'var(--gray-text)', lineHeight: 1.8, marginBottom: '.75rem' }}>
+            <strong>Verbraucherstreitbeilegung</strong><br />
+            Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
+          </p>
+          <p style={{ fontSize: '.875rem', color: 'var(--gray-text)', lineHeight: 1.8 }}>
+            Informationen zum Datenschutz finden Sie in unserer <a href="/datenschutz" style={{ color: 'var(--blue)' }}>Datenschutzerklärung</a>.
           </p>
         </div>
       </section>
@@ -215,11 +229,11 @@ export default function Home() {
       <footer style={{ background: 'var(--dark)', color: 'rgba(255,255,255,.5)', padding: '2rem', textAlign: 'center', fontSize: '.85rem' }}>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
           <a href="#impressum" style={{ color: 'var(--cyan)' }}>Impressum</a>
-          <a href="#datenschutz" style={{ color: 'var(--cyan)' }}>Datenschutz</a>
+          <a href="/datenschutz" style={{ color: 'var(--cyan)' }}>Datenschutz</a>
           <a href="#kontakt" style={{ color: 'var(--cyan)' }}>Kontakt</a>
           <a href="https://www.pan21.com" target="_blank" rel="noopener" style={{ color: 'var(--cyan)' }}>PAN21 Network</a>
         </div>
-        <p>© 2026 i-PBX.eu – Cloud-Telefonanlage & VoIP · PAN21.COM Corporate Consultants Ltd</p>
+        <p>© 2026 i-PBX.eu – Cloud-Telefonanlage & VoIP · PAN21.com International LLC</p>
       </footer>
     
     

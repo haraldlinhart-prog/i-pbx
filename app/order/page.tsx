@@ -585,5 +585,13 @@ function OrderInner() {
 }
 
 export default function OrderPage() {
-  return <Suspense><OrderInner /></Suspense>
+  return (
+    <>
+      <Suspense><OrderInner /></Suspense>
+      <div style={{ textAlign: 'center', fontSize: '.8rem', padding: '1.5rem 1rem 2rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+        <a href="/#impressum" style={{ color: 'var(--gray-text)' }}>Impressum</a>
+        <a href="/datenschutz" style={{ color: 'var(--gray-text)' }}>Datenschutz</a>
+      </div>
+    </>
+  )
 }
