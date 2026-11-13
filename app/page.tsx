@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import ContactForm from './ContactForm'
 import AvailableNumbers from './AvailableNumbers'
+import SuchmaschinenBlogLink from './SuchmaschinenBlogLink';
 
 export default function Home() {
   return (
@@ -19,6 +20,8 @@ export default function Home() {
         <a href="/" style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 700, color: 'white', letterSpacing: '.02em' }}>
           i-<span style={{ color: 'var(--cyan)' }}>PBX</span>.eu
         </a>
+        {/* suchmaschinen.pro:blog-link */}
+        <SuchmaschinenBlogLink />
         <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
           <a href="#leistungen" style={{ color: 'rgba(255,255,255,.75)', fontSize: '.85rem', fontWeight: 500, letterSpacing: '.05em', textTransform: 'uppercase' }}>Leistungen</a>
           <a href="#preise" style={{ color: 'rgba(255,255,255,.75)', fontSize: '.85rem', fontWeight: 500, letterSpacing: '.05em', textTransform: 'uppercase' }}>Preise</a>
