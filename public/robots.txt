@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.i-pbx.eu/sitemap-blog.xml
