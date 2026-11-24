@@ -2,8 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.i-pbx.eu/blog</loc>
-    <lastmod>2026-11-23</lastmod>
+    <lastmod>2026-11-24</lastmod>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.i-pbx.eu/blog/virtuelle-festnetznummer-einrichten-ortsvorwahl-behalten-standort-frei</loc>
+    <lastmod>2026-11-24</lastmod>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.i-pbx.eu/blog/ki-telefonassistent-kostenlos-free-tarif-testphase-oder-open-source-wa</loc>
