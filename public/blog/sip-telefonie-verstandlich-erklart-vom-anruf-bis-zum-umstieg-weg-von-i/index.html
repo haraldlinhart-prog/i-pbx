@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIP-Telefonie verständlich erklärt: Vom Anruf bis zum Umstieg weg von ISDN</title>
+<meta name="description" content="Was ist SIP-Telefonie? Ablauf eines SIP-Gesprächs, SIP-Trunk vs. SIP-Account, Unterschied zu VoIP und ISDN, Voraussetzungen und Checkliste für den Umstieg.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.i-pbx.eu/blog/sip-telefonie-verstandlich-erklart-vom-anruf-bis-zum-umstieg-weg-von-i">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SIP-Telefonie verständlich erklärt: Vom Anruf bis zum Umstieg weg von ISDN">
+<meta property="og:description" content="Was ist SIP-Telefonie? Ablauf eines SIP-Gesprächs, SIP-Trunk vs. SIP-Account, Unterschied zu VoIP und ISDN, Voraussetzungen und Checkliste für den Umstieg.">
+<meta property="og:url" content="https://www.i-pbx.eu/blog/sip-telefonie-verstandlich-erklart-vom-anruf-bis-zum-umstieg-weg-von-i">
+<meta property="og:site_name" content="i-pbx.eu">
+<meta property="og:image" content="https://video.pan21.com/blog-images/img_6b07cca66137b8.31230795.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://video.pan21.com/blog-images/img_6b07cca66137b8.31230795.jpg">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"SIP-Telefonie verständlich erklärt: Vom Anruf bis zum Umstieg weg von ISDN","description":"Was ist SIP-Telefonie? Ablauf eines SIP-Gesprächs, SIP-Trunk vs. SIP-Account, Unterschied zu VoIP und ISDN, Voraussetzungen und Checkliste für den Umstieg.","inLanguage":"de","datePublished":"2026-11-26T06:07:37.683Z","dateModified":"2026-11-26T06:07:37.683Z","mainEntityOfPage":{"@type":"WebPage","@id":"https://www.i-pbx.eu/blog/sip-telefonie-verstandlich-erklart-vom-anruf-bis-zum-umstieg-weg-von-i"},"url":"https://www.i-pbx.eu/blog/sip-telefonie-verstandlich-erklart-vom-anruf-bis-zum-umstieg-weg-von-i","image":"https://video.pan21.com/blog-images/img_6b07cca66137b8.31230795.jpg","author":{"@type":"Organization","name":"i-pbx.eu","url":"https://www.i-pbx.eu/"},"publisher":{"@type":"Organization","name":"i-pbx.eu","url":"https://www.i-pbx.eu/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","name":"SIP-Telefonie verständlich erklärt: Vom Anruf bis zum Umstieg weg von ISDN","itemListElement":[{"@type":"ListItem","position":1,"name":"i-pbx.eu","item":"https://www.i-pbx.eu/"},{"@type":"ListItem","position":2,"name":"News","item":"https://www.i-pbx.eu/blog"},{"@type":"ListItem","position":3,"name":"SIP-Telefonie verständlich erklärt: Vom Anruf bis zum Umstieg weg von ISDN","item":"https://www.i-pbx.eu/blog/sip-telefonie-verstandlich-erklart-vom-anruf-bis-zum-umstieg-weg-von-i"}]}</script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 40px 20px; line-height: 1.7; color: #1a1a1a; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.4rem; margin-top: 2rem; }
+  h3 { font-size: 1.15rem; margin-top: 1.5rem; }
+  p { margin: 1rem 0; }
+  a.back { display: inline-block; margin-bottom: 24px; color: #666; text-decoration: none; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<a class="back" href="https://www.i-pbx.eu/">&larr; Zurück zu i-pbx.eu</a>
+<h1>SIP-Telefonie verständlich erklärt: Vom Anruf bis zum Umstieg weg von ISDN</h1>
+<figure style="margin:0 0 1.5rem;"><img src="https://video.pan21.com/blog-images/img_6b07cca66137b8.31230795.jpg" alt="SIP-Telefonie verständlich erklärt: Vom Anruf bis zum Umstieg weg von ISDN" style="width:100%;height:auto;border-radius:8px;" loading="lazy"><figcaption style="font-size:0.78rem;color:#8a9a94;margin-top:0.4rem;">Bild: Pixabay</figcaption></figure>
+<p>Wer sich mit moderner Telefonie beschäftigt, stößt schnell auf den Begriff SIP. Die Frage „Was ist SIP-Telefonie?“ lässt sich kurz beantworten: SIP steht für <em>Session Initiation Protocol</em>. Es ist ein Signalisierungsprotokoll, das Telefonate über IP-Netze aufbaut, steuert und beendet. Die Sprache selbst wird dabei getrennt übertragen. Dieser Artikel erklärt die Technik Schritt für Schritt, grenzt sie von VoIP, ISDN und Analog ab und gibt Ihnen eine Checkliste für den Umstieg an die Hand.</p>
+
+<h2>Wie ein SIP-Gespräch abläuft</h2>
+<p>Ein SIP-Telefonat besteht aus drei Phasen. Wer sie kennt, versteht auch viele Störungen besser.</p>
+<h3>1. Registrierung</h3>
+<p>Ein Endgerät, etwa ein Tischtelefon, eine Softphone-App oder eine Telefonanlage, meldet sich bei einem SIP-Server an. Dazu nutzt es Zugangsdaten wie Benutzername, Passwort und Serveradresse. Der Server merkt sich, unter welcher IP-Adresse das Gerät gerade erreichbar ist. Das Gerät wiederholt die Anmeldung regelmäßig, damit der Eintrag aktuell bleibt. Deshalb funktionieren SIP-Anschlüsse auch dann, wenn sich die IP-Adresse ändert.</p>
+<h3>2. Verbindungsaufbau</h3>
+<p>Wenn Sie eine Nummer wählen, sendet Ihr Gerät eine Einladung (INVITE) an den Server. Dieser leitet sie zum Ziel weiter, entweder zu einem anderen SIP-Teilnehmer oder über ein Gateway ins öffentliche Telefonnetz. Das Ziel signalisiert, dass es klingelt, und bei Annahme wird der Aufbau bestätigt. In dieser Phase handeln beide Seiten auch aus, welche Sprachcodecs sie verwenden und über welche Adressen und Ports der Ton laufen soll. Dafür wird meist das Beschreibungsformat SDP eingesetzt.</p>
+<h3>3. Medienübertragung per RTP</h3>
+<p>Das eigentliche Gespräch läuft nicht über SIP, sondern über RTP (<em>Real-time Transport Protocol</em>). Die Sprache wird digitalisiert, komprimiert, in kleine Pakete zerlegt und in Echtzeit übertragen. Auf der Gegenseite setzt das Gerät die Pakete wieder zusammen. Gehen Pakete verloren oder kommen sie unregelmäßig an, hören Sie Knacken, Aussetzer oder Verzögerungen. Mit einem BYE-Signal beenden schließlich beide Seiten die Sitzung.</p>
+<p>Wichtig für die Praxis: Signalisierung und Sprache nutzen unterschiedliche Verbindungen. Das erklärt typische Fehlerbilder wie „Es klingelt, aber ich höre nichts“. Meist blockiert dann eine Firewall oder ein Router den RTP-Verkehr.</p>
+
+<h2>SIP-Trunk und SIP-Account: der Unterschied</h2>
+<p>Beide Begriffe beschreiben SIP-Zugänge, sie dienen aber unterschiedlichen Zwecken.</p>
+<ul>
+<li><strong>SIP-Account:</strong> ein einzelner Zugang für ein Gerät oder eine Person, vergleichbar mit einer einzelnen Leitung samt Rufnummer. Er eignet sich für Einzelplätze, Homeoffice oder Softphones.</li>
+<li><strong>SIP-Trunk:</strong> ein Anschluss für eine gesamte Telefonanlage. Er bündelt mehrere gleichzeitige Gespräche und meist einen ganzen Rufnummernblock mit Durchwahlen. Er ersetzt also einen ISDN-Anlagenanschluss.</li>
+</ul>
+<p>Wie ein SIP-Trunk im Unternehmensalltag funktioniert, beschreibt unser Beitrag zum <a href="https://www.i-pbx.eu/blog/sip-trunk-moderne-telefonie-fur-unternehmen-erklart">SIP-Trunk</a> ausführlicher.</p>
+
+<h2>SIP, VoIP, ISDN und Analog im Vergleich</h2>
+<p>VoIP ist der Oberbegriff für Telefonie über IP-Netze. SIP ist das am weitesten verbreitete Protokoll, mit dem VoIP umgesetzt wird. Es gibt auch andere Protokolle, im Geschäftsumfeld ist SIP aber der Standard. Man kann also sagen: SIP-Telefonie ist eine Form von VoIP.</p>
+<ul>
+<li><strong>Analog:</strong> Die Sprache wird als elektrisches Signal über eine Kupferleitung übertragen. Pro Leitung ist ein Gespräch möglich.</li>
+<li><strong>ISDN:</strong> Die Sprache wird digital über dedizierte Kanäle übertragen. Ein Basisanschluss bietet zwei gleichzeitige Gespräche, ein Anlagenanschluss mehrere Rufnummern. Die Technik ist an die Leitung gebunden.</li>
+<li><strong>SIP:</strong> Die Sprache läuft als Datenpakete über Ihren Internetzugang. Rufnummern und Kanäle sind Software-Einstellungen und lassen sich flexibler ändern. Die Zahl der Gespräche hängt von Vertrag und verfügbarer Bandbreite ab.</li>
+</ul>
+<p>Ein praktischer Vorteil: Ein SIP-Anschluss ist nicht an einen Standort gebunden. Ein klassischer Anschluss ist es dagegen schon.</p>
+
+<h2>Voraussetzungen: Bandbreite, Router und Firewall</h2>
+<h3>Bandbreite</h3>
+<p>Ein Gespräch braucht nur wenig Datenrate, entscheidend ist aber, dass sie konstant ist. Planen Sie die Zahl gleichzeitiger Gespräche ein und berücksichtigen Sie vor allem den Upload. Wichtiger als hohe Spitzenwerte ist eine stabile Verbindung ohne starke Schwankungen.</p>
+<h3>Router und Firewall</h3>
+<ul>
+<li>Der Router sollte SIP und RTP sauber verarbeiten. Eine automatische „SIP-ALG“-Funktion verursacht manchmal Probleme und sollte im Zweifel geprüft werden.</li>
+<li>Die Firewall muss die Signalisierung und den RTP-Portbereich des Anbieters zulassen.</li>
+<li>Mit Priorisierung (QoS) lässt sich Sprachverkehr gegenüber Downloads bevorzugen.</li>
+<li>Verschlüsselung per TLS und SRTP schützt Signalisierung und Sprache, sofern Anbieter und Geräte sie unterstützen.</li>
+</ul>
+
+<h2>Beispiel: Firma mit Auslandssitz und deutscher Rufnummer</h2>
+<p>Ein Unternehmen hat sein Büro im Ausland, möchte aber für Kunden in Deutschland unter einer deutschen Rufnummer erreichbar sein. Bei klassischer Telefonie wäre das umständlich, denn der Anschluss hängt an einer Leitung vor Ort. Mit SIP entfällt diese Bindung: Die deutsche Rufnummer wird auf dem SIP-Server des Anbieters hinterlegt, und die Endgeräte registrieren sich von dort aus, wo sie stehen. Ein eingehender Anruf aus Deutschland wird dann per SIP zum Telefon oder zur App im Ausland geleitet. Mitarbeitende an verschiedenen Orten können so unter derselben Nummer arbeiten.</p>
+<p>Beachten Sie dabei, dass für Rufnummern gegebenenfalls Anforderungen des Anbieters und gesetzliche Vorgaben gelten, etwa Nachweise zur Identität. Diese Prüfungen sind Teil der Einrichtung und werden durchgeführt. Auch die Anrufbearbeitung lässt sich ergänzen, zum Beispiel mit einem <a href="https://www.i-pbx.eu/blog/ki-telefonassistent-intelligente-anrufbearbeitung-fur-ihr-unternehmen">KI-Telefonassistenten</a>, der Anrufe außerhalb der Bürozeiten entgegennimmt.</p>
+
+<h2>Checkliste: Umstieg von ISDN auf SIP</h2>
+<ul>
+<li>Bestand erfassen: Rufnummern, Durchwahlen, Faxgeräte, Alarm- und Aufzugstelefone, EC-Terminals.</li>
+<li>Gleichzeitige Gespräche in Spitzenzeiten abschätzen.</li>
+<li>Internetanschluss prüfen: Upload, Stabilität, gegebenenfalls Ersatzzugang.</li>
+<li>Router und Firewall auf SIP/RTP-Tauglichkeit prüfen.</li>
+<li>Prüfen, ob Telefonanlage und Endgeräte SIP unterstützen oder ob eine Cloud-Telefonanlage sinnvoller ist.</li>
+<li>Rufnummernmitnahme (Portierung) rechtzeitig mit dem Anbieter planen, damit keine Erreichbarkeitslücke entsteht.</li>
+<li>Sonderfälle klären: Fax, Alarmanlagen und andere Geräte brauchen oft eigene Lösungen.</li>
+<li>Notrufnummern und Standortangaben einrichten und testen.</li>
+<li>Vor dem Umschalten testen: Ein- und ausgehende Anrufe, Sprachqualität, Weiterleitungen.</li>
+<li>Team informieren und kurz einweisen.</li>
+</ul>
+<p>Gerade Praxen sollten vorab klären, wie Erreichbarkeit zu Stoßzeiten gesichert wird. Anregungen finden Sie im Beitrag zum <a href="https://www.i-pbx.eu/blog/ki-telefonassistent-fur-die-arztpraxis-entlastung-im-praxisalltag">KI-Telefonassistenten für die Arztpraxis</a>.</p>
+
+<h2>Fazit</h2>
+<p>SIP-Telefonie überträgt Gespräche in drei Schritten: Registrierung, Verbindungsaufbau und Sprachübertragung per RTP. Sie ist die technische Grundlage der meisten Business-VoIP-Lösungen und löst ISDN und Analog ab. Mit einem stabilen Internetanschluss, passend konfiguriertem Router und sorgfältiger Planung gelingt der Umstieg gut. Für eine Lösung, die zu Ihrem Unternehmen passt, erstellt i-PBX Ihnen gern ein individuelles Angebot.</p>
+<p style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid #eee"><a href="https://www.i-pbx.eu/blog">Weitere Artikel &rarr;</a></p>
+<footer style="margin-top:2rem;font-size:0.85rem;color:#666"><a href="https://www.i-pbx.eu/datenschutz">Datenschutz</a></footer>
+</body>
+</html>

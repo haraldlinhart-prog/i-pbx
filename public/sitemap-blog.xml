@@ -2,8 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.i-pbx.eu/blog</loc>
-    <lastmod>2026-11-25</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.i-pbx.eu/blog/sip-telefonie-verstandlich-erklart-vom-anruf-bis-zum-umstieg-weg-von-i</loc>
+    <lastmod>2026-11-26</lastmod>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.i-pbx.eu/blog/nie-mehr-verpasste-auftrage-so-hilft-ein-ki-telefonassistent-dem-handw</loc>
